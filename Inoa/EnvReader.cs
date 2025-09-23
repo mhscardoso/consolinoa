@@ -1,6 +1,8 @@
 using System.Configuration;
 using System.Collections.Specialized;
 
+namespace Inoa;
+
 class EnvReader
 {
     public static void Load()
@@ -9,7 +11,8 @@ class EnvReader
 
         foreach (string? key in sAll.AllKeys)
         {
-            Console.WriteLine($"{key} = {sAll.Get(key)}");
+            if (key is null) continue;
+            Environment.SetEnvironmentVariable(key, sAll.Get(key));
         }
     }
 }

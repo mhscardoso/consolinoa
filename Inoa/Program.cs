@@ -2,26 +2,16 @@
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
+        string ticker = "BBAS3";
+
         EnvReader.Load();
 
-        // string result = await Request("BBAS3");
+        string result = await RequestBuilder.Request(ticker);
 
-        // Console.WriteLine(result);
-    }
+        double price = RequestBuilder.GetPrice(result);
 
-
-    static async Task<string> Request(string ticker)
-    {
-        string token = Environment.GetEnvironmentVariable("API_KEY") ?? throw new Exception("Missing API_KEY");
-        string url_header = Environment.GetEnvironmentVariable("URL") ?? throw new Exception("Missing URL");
-
-        string url = $"{url_header}{ticker}?token={token}";
-
-        using HttpClient client = new();
-        string response = await client.GetStringAsync(url);
-
-        return response;
+        Console.WriteLine($"{ticker}: {price}");
     }
 }
