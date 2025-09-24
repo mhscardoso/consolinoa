@@ -42,11 +42,9 @@ class RequestBuilder
 {
     public static async Task<string> Request(string ticker)
     {
-        string token = Environment.GetEnvironmentVariable("API_KEY") ??
-            throw new Exception("Missing API_KEY");
+        string token = EnvReader.GetVariable("API_KEY");
         
-        string url_header = Environment.GetEnvironmentVariable("URL") ??
-            throw new Exception("Missing URL");
+        string url_header = EnvReader.GetVariable("URL");
 
         string url = $"{url_header}{ticker}?token={token}";
 

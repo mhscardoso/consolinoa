@@ -15,4 +15,13 @@ class EnvReader
             Environment.SetEnvironmentVariable(key, sAll.Get(key));
         }
     }
+
+
+    public static string GetVariable(string key)
+    {
+        string value = Environment.GetEnvironmentVariable(key) ??
+            throw new Exception($"Missing {key}");
+
+        return value;
+    }
 }

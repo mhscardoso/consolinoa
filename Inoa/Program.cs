@@ -12,6 +12,9 @@ class Program
 
         double price = RequestBuilder.GetPrice(result);
 
-        Console.WriteLine($"{ticker}: {price}");
+        MailSender.SendMail(
+            $"{ticker}: BUY",
+            $"The price of {ticker} is R$ {price}.{Environment.NewLine}Your lowest band is: R$ 25.03"
+        );
     }
 }
