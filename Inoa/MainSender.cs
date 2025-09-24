@@ -10,13 +10,21 @@ class MailSender
         string username = EnvReader.GetVariable("SMTP_USER");
         string password = EnvReader.GetVariable("SMTP_PASS");
         string emailTo  = EnvReader.GetVariable("MAIL_TO");
+        string host     = EnvReader.GetVariable("SMTP_SERVER");
+        int port        = int.Parse(EnvReader.GetVariable("SMTP_PORT"));
+
+        NetworkCredential credentials = new()
+        {
+            UserName = username,
+            Password = password
+        };
 
         SmtpClient client = new()
         {
-            Host                  = EnvReader.GetVariable("SMTP_SERVER"),
-            Port                  = int.Parse(EnvReader.GetVariable("SMTP_PORT")),
+            Host                  = host,
+            Port                  = port,
             EnableSsl             = true,
-            Credentials           = new NetworkCredential(username, password),
+            Credentials           = credentials,
             DeliveryMethod        = SmtpDeliveryMethod.Network,
             UseDefaultCredentials = false,
         };
