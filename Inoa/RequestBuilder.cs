@@ -43,7 +43,7 @@ class RequestBuilder
     public static async Task<string> Request(string ticker)
     {
         string token = EnvReader.GetVariable("API_KEY");
-        
+
         string url_header = EnvReader.GetVariable("URL");
 
         string url = $"{url_header}{ticker}?token={token}";
@@ -61,5 +61,13 @@ class RequestBuilder
             throw new Exception("Error converting String to JSON.");
 
         return request.results[0].regularMarketPrice;
+    }
+
+    public static RequestDTO TransformRequest(string tickerInfo)
+    {
+        RequestDTO request = JsonSerializer.Deserialize<RequestDTO>(tickerInfo) ??
+            throw new Exception("Error converting String to JSON.");
+
+        return request;
     }
 }

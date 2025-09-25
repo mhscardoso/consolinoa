@@ -41,6 +41,40 @@ public class StockDB
         Stocks[index].Price = price;
     }
 
+
+    public void UpdateBands(int index, double bandOne, double bandTwo)
+    {
+        double minBand = Math.Min(bandOne, bandTwo);
+        double maxBand = Math.Max(bandOne, bandTwo);
+
+        Stocks[index].LowestBand = minBand;
+        Stocks[index].HighestBand = maxBand;
+    }
+
+    public void ChooseStockToUpdateBand()
+    {
+        WatchStockList();
+
+        int? id = Reader.ReadInt("Choose some ticket by id:");
+        if (id is null) return;
+
+        if (id < 0 || id >= Stocks.Count)
+        {
+            Console.WriteLine($"There is no ticket with id {id}.");
+            return;
+        }
+
+        double? bandOne = Reader.ReadDouble("Choose first band: ");
+        if (bandOne is null) return;
+
+        double? bandTwo = Reader.ReadDouble("Choose second band: ");
+        if (bandTwo is null) return;
+
+        UpdateBands((int)id, (double)bandOne, (double)bandTwo);
+
+        Console.WriteLine($"You modify the bands of {Stocks[(int)id].StockName}");
+    }
+
     public void AddStockItem(string stockName, double numberBand1, double numberBand2)
     {
         double lowestBand = Math.Min(numberBand1, numberBand2);
@@ -76,7 +110,7 @@ public class StockDB
 
         if (bandOne is null || bandTwo is null) return;
 
-        AddStockItem(ticket, (double) bandOne, (double) bandTwo);
+        AddStockItem(ticket, (double)bandOne, (double)bandTwo);
     }
 
 
@@ -100,6 +134,7 @@ public class StockDB
         Console.WriteLine($"# ------------------ #");
         Console.WriteLine($"Ticket:        {thisStock.StockName}");
         Console.WriteLine($"Price:         {thisStock.Price}");
+        Console.WriteLine($"Last Request:  {thisStock.LastTimeGet}");
         Console.WriteLine($"LowestBand:    {thisStock.LowestBand}");
         Console.WriteLine($"HighestBand:   {thisStock.HighestBand}");
         Console.WriteLine($"# ------------------ #");
@@ -109,34 +144,16 @@ public class StockDB
     {
         WatchStockList();
 
-        Console.WriteLine("Choose some ticket by id:");
-        string? strNumber = Console.ReadLine();
+        int? id = Reader.ReadInt("Choose some ticket by id:");
+        if (id is null) return;
 
-        if (strNumber is null)
-        {
-            Console.WriteLine("Wrong Input");
-            return;
-        }
-
-        int id;
-
-        try
-        {
-            id = int.Parse(strNumber);
-        }
-        catch
-        {
-            Console.WriteLine("Not a valid number.");
-            return;
-        }
-
-        if (id >= Stocks.Count)
+        if (id < 0 || id >= Stocks.Count)
         {
             Console.WriteLine($"There is no ticket with id {id}.");
             return;
         }
 
-        WatchStockInfo(id);
+        WatchStockInfo((int)id);
     }
 
 
@@ -152,5 +169,106 @@ public class StockDB
         result = result[..^1];
 
         return result;
+    }
+
+
+    public async Task<List<Stock>> RequestForAll()
+    {
+        string ticketString = FormTicketStringList();
+
+        string resultString = await RequestBuilder.Request(ticketString);
+
+        RequestDTO request = RequestBuilder.TransformRequest(resultString);
+        string requestedAt = request.requestedAt;
+
+        List<Stock> stocksOuterBand = [];
+
+        foreach (ResultDTO result in request.results)
+        {
+            int ticketIndex = FindIndexByStockName(result.symbol);
+            UpdateStockItem(ticketIndex, requestedAt, result.regularMarketPrice);
+
+            if (
+                result.regularMarketChange < Stocks[ticketIndex].LowestBand ||
+                result.regularMarketPrice > Stocks[ticketIndex].HighestBand
+            )
+            {
+                stocksOuterBand.Add(Stocks[ticketIndex]);
+            }
+        }
+
+        Console.WriteLine("Request Done. You can check your Tickets.");
+
+        return stocksOuterBand;
+    }
+
+
+    public async Task<List<Stock>> RequestForOne()
+    {
+        WatchStockList();
+
+        int? id = Reader.ReadInt("Choose some ticket by id:");
+        if (id is null) return [];
+
+        if (id < 0 || id >= Stocks.Count)
+        {
+            Console.WriteLine($"There is no ticket with id {id}.");
+            return [];
+        }
+
+        string ticketString = Stocks[(int) id].StockName;
+
+        string resultString = await RequestBuilder.Request(ticketString);
+
+        RequestDTO request = RequestBuilder.TransformRequest(resultString);
+        string requestedAt = request.requestedAt;
+
+        List<Stock> stocksOuterBand = [];
+
+        foreach (ResultDTO result in request.results)
+        {
+            int ticketIndex = FindIndexByStockName(result.symbol);
+            UpdateStockItem(ticketIndex, requestedAt, result.regularMarketPrice);
+
+            if (
+                result.regularMarketChange < Stocks[ticketIndex].LowestBand ||
+                result.regularMarketPrice > Stocks[ticketIndex].HighestBand
+            )
+            {
+                stocksOuterBand.Add(Stocks[ticketIndex]);
+            }
+        }
+
+        Console.WriteLine("Request Done. You can check your Tickets.");
+
+        return stocksOuterBand;
+    }
+
+    public static string MountMessage(List<Stock> stocks)
+    {
+        string message = "";
+
+        foreach (Stock s in stocks)
+        {
+            if (s.Price < s.LowestBand)
+            {
+                message += $"{s.StockName}: BUY ; Price: {s.Price}; Lowest: {s.LowestBand}{Environment.NewLine}";
+            }
+            else
+            {
+                message += $"{s.StockName}: SELL; Price: {s.Price}; Highest: {s.HighestBand}{Environment.NewLine}";
+            }
+        }
+
+        return message;
+    }
+
+
+    public async Task UpdateStatusForUser()
+    {
+        List<Stock> stocksOuterBand = await RequestForOne();
+        string message = MountMessage(stocksOuterBand);
+
+        MailSender.SendMail("Inoa: Stock List Review", message);
     }
 }

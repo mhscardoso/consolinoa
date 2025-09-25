@@ -51,7 +51,7 @@ public class Reader
         }
         catch
         {
-            Console.WriteLine("Cannot convert to Double.");
+            Console.WriteLine("Cannot convert to Int.");
             return null;
         }
 
