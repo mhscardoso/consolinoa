@@ -203,6 +203,36 @@ public class StockDB
     }
 
 
+
+    // Make many requests for price.
+    public async Task<List<Stock>> RequestAll()
+    {
+        List<Stock> stocksOuterBand = [];
+
+        foreach (Stock s in Stocks)
+        {
+            string resultString = await RequestBuilder.Request(s.StockName.ToUpper());
+            RequestDTO request = RequestBuilder.TransformRequest(resultString);
+            string requestedAt = request.requestedAt;
+
+            ResultDTO result = request.results.First();
+
+            int ticketIndex = FindIndexByStockName(result.symbol);
+            UpdateStockItem(ticketIndex, requestedAt, result.regularMarketPrice);
+
+            if (
+                result.regularMarketChange < Stocks[ticketIndex].LowestBand ||
+                result.regularMarketPrice > Stocks[ticketIndex].HighestBand
+            )
+            {
+                stocksOuterBand.Add(Stocks[ticketIndex]);
+            }
+        }
+
+        return stocksOuterBand;
+    }
+
+
     public async Task<List<Stock>> RequestForOne()
     {
         WatchStockList();
@@ -216,7 +246,7 @@ public class StockDB
             return [];
         }
 
-        string ticketString = Stocks[(int) id].StockName;
+        string ticketString = Stocks[(int)id].StockName;
 
         string resultString = await RequestBuilder.Request(ticketString);
 
@@ -266,7 +296,7 @@ public class StockDB
 
     public async Task UpdateStatusForUser()
     {
-        List<Stock> stocksOuterBand = await RequestForOne();
+        List<Stock> stocksOuterBand = await RequestAll();
         string message = MountMessage(stocksOuterBand);
 
         MailSender.SendMail("Inoa: Stock List Review", message);

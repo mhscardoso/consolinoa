@@ -27,6 +27,16 @@ class Program
 
         StockDB stocks = new(firstTicker, min_limit, max_limit);
 
+        var backGroundTask = Task.Run(async () =>
+        {
+            while (true)
+            {
+                await stocks.UpdateStatusForUser();
+                // Make a request each five minutes
+                await Task.Delay(300 * 1000);
+            }
+        });
+
         while (true)
         {
             int? option = Menu();
