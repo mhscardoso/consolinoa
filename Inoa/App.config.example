@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <appSettings>
+        <add key="API_KEY"     value="" />
+        <add key="URL"         value="" />
+        <add key="SMTP_PASS"   value="" />
+        <add key="SMTP_SERVER" value="" />
+        <add key="SMTP_PORT"   value="" />
+        <add key="SMTP_USER"   value="" />
+        <add key="MAIL_TO"     value="" />
+    </appSettings>
+</configuration>
