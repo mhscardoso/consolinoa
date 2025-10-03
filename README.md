@@ -10,3 +10,16 @@ It's important update your config file (an XML) like the
 - App.config.example
 
 configuration.
+
+## Running this project
+
+After the build...
+
+To run this you can write on your terminal:
+
+```(bash)
+dotnet run --project Inoa PETR4 30.2 33.7
+```
+
+This takes the first ticker you want to analyze
+(and it is mandatory to enter it)
